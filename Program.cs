@@ -31,167 +31,7 @@ internal class Program
         }
     }
 
-    public static readonly string[] CtrTypeStrs = new string[10]
-    {
-        "",
-        "Gate 2000",
-        "Matrix II Net",
-        "Matrix III Net",
-        "Z5R Net",
-        "Z5R Net 8000",
-        "Guard Net",
-        "Z-9 EHT Net",
-        "EuroLock EHT net",
-        "Z5R Web"
-    };
-
-    public static readonly string[] KeyModeStrs = new string[2]
-    {
-        "Touch Memory",
-        "Proximity"
-    };
-
-    public static readonly string[] KeyTypeStrs = new string[4]
-    {
-        "",
-        "Basic",
-        "Blocking",
-        "Master"
-    };
-
-    public static readonly string[] KeyTypeAbbrs = new string[4]
-    {
-        "",
-        "N",
-        "B",
-        "M"
-    };
-
-    public static readonly string[] EvTypeStrs =
-    {
-            "",
-            "1: Открыто кнопкой изнутри",
-            "2: Ключ не найден в банке ключей",
-            "3: Ключ найден, дверь открыта",
-            "4: Ключ найден, доступ не разрешен",
-            "5: Открыто оператором по сети",
-            "6: Ключ найден, дверь заблокирована",
-            "7: Попытка открыть заблокированную дверь кнопкой",
-            "8: Дверь взломана",
-            "9: Дверь оставлена открытой (timeout)",
-            "10: Проход состоялся",
-            "11: Сработал датчик 1",
-            "12: Сработал датчик 2",
-            "13: Перезагрузка контроллера",
-            "14: Заблокирована кнопка открывания",
-            "15: Попытка двойного прохода",
-            "16: Дверь открыта штатно",
-            "17: Дверь закрыта",
-            "18: Пропало питание",
-            "19: Включение электропитания",
-            "20: Включение электропитания",
-            "21: Включение замка (триггер)",
-            "22: Отключение замка (триггер)",
-            "23: Изменение состояния Режим",
-            "24: Изменение состояния Пожара",
-            "25: Изменение состояния Охраны",
-            "26: Неизвестный ключ",
-            "27: Совершен вход в шлюз",
-            "28: Заблокирован вход в шлюз (занят)",
-            "29: Разрешен вход в шлюз",
-            "30: Заблокирован проход (Антипассбек)",
-            "31: Hotel40",
-            "32: Hotel41"
-    };
-
-    public static readonly string[] DirectStrs =
-    {
-            "",
-            "IN",
-            "OUT"
-    };
-
-    public static readonly string[] EcSubEvStrs =
-    {
-            "",
-            "Поднесена карта для входа",
-            "(зарезервировано)",
-            "Включено командой по сети",
-            "Выключено командой по сети",
-            "Включено по временной зоне",
-            "Выключено по временной зоне",
-            "Поднесена карта к контрольному устройству",
-            "(зарезервировано)",
-            "Выключено после отработки таймаута",
-            "Выключено по срабатыванию датчика выхода"
-    };
-
-    public static readonly string[] FireSubEvStrs =
-    {
-            "",
-            "Выключено по сети",
-            "Включено по сети",
-            "Выключено по входу FIRE",
-            "Включено по входу FIRE",
-            "Выключено по датчику температуры",
-            "Включено по датчику температуры"
-    };
-
-    public static readonly string[] SecurSubEvStrs =
-    {
-            "",
-            "Выключено по сети",
-            "Включено по сети",
-            "Выключено по входу ALARM",
-            "Включено по входу ALARM",
-            "Выключено по тамперу",
-            "Включено по тамперу",
-            "Выключено по датчику двери",
-            "Включено по датчику двери"
-    };
-
-    public static readonly string[] ModeSubEvStrs =
-    {
-            "",
-            "Установка командой по сети",
-            "Отказано оператору по сети",
-            "Началась временная зона",
-            "Окончилась временная зона",
-            "Установка картой",
-            "Отказано изменению картой"
-        };
-    public static readonly string[] ModeStrs =
-    {
-            "",
-            "Обычный",
-            "Блокировка",
-            "Свободный",
-            "Ожидание"
-    };
-
-    public static readonly string[] HModeStrs =
-    {
-            "",
-            "Обычный",
-            "Блокировка",
-            "Свободный",
-            "???"
-    };
-
-    public static readonly string[] HotelSubEvStrs =
-    {
-            "",
-            "Карта открытия",
-            "Карта блокирующая",
-            "Дополнительная функция",
-            "создана резервная карта",
-            "Network",
-            "TimeZone",
-            "обновлен счетчик",
-            "обновлен криптоключ",
-            "Pulse Z",
-            "Изменено состояние"
-    };
+ 
 
     public const byte CtrAddr = 2;
 
@@ -502,8 +342,8 @@ internal class Program
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
-                                EvTypeStrs[(int)rEv.nType],
-                                EcSubEvStrs[(int)nSubEvent], nPowerFlags);
+                                Event_strs.EvTypeStrs[(int)rEv.nType],
+                                Event_strs.EcSubEvStrs[(int)nSubEvent], nPowerFlags);
                         }
                         break;
                     case ZG_CTR_EV_TYPE.ZG_EV_FIRE_STATE:
@@ -516,8 +356,8 @@ internal class Program
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
-                                EvTypeStrs[(int)rEv.nType],
-                                FireSubEvStrs[(int)nSubEvent], nFireFlags);
+                                Event_strs.EvTypeStrs[(int)rEv.nType],
+                                Event_strs.FireSubEvStrs[(int)nSubEvent], nFireFlags);
                         }
                         break;
                     case ZG_CTR_EV_TYPE.ZG_EV_SECUR_STATE:
@@ -530,8 +370,8 @@ internal class Program
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
-                                EvTypeStrs[(int)rEv.nType],
-                                SecurSubEvStrs[(int)nSubEvent], nSecurFlags);
+                                Event_strs.EvTypeStrs[(int)rEv.nType],
+                                Event_strs.SecurSubEvStrs[(int)nSubEvent], nSecurFlags);
                         }
                         break;
                     case ZG_CTR_EV_TYPE.ZG_EV_MODE_STATE:
@@ -544,9 +384,9 @@ internal class Program
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
-                                EvTypeStrs[(int)rEv.nType],
-                                ModeStrs[(int)nMode],
-                                ModeSubEvStrs[(int)nSubEvent]);
+                                Event_strs.EvTypeStrs[(int)rEv.nType],
+                                Event_strs.ModeStrs[(int)nMode],
+                                Event_strs.ModeSubEvStrs[(int)nSubEvent]);
                         }
                         break;
                     case ZG_CTR_EV_TYPE.ZG_EV_UNKNOWN_KEY:
@@ -570,9 +410,9 @@ internal class Program
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
-                                EvTypeStrs[(int)rEv.nType],
-                                HModeStrs[(int)nMode],
-                                HotelSubEvStrs[(int)nSubEvent],
+                                Event_strs.EvTypeStrs[(int)rEv.nType],
+                                Event_strs.HModeStrs[(int)nMode],
+                                Event_strs.HotelSubEvStrs[(int)nSubEvent],
                                 nFlags);
                         }
                         break;
@@ -600,8 +440,8 @@ internal class Program
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
-                                DirectStrs[(int)nDirect],
-                                EvTypeStrs[(int)rEv.nType],
+                                Event_strs.DirectStrs[(int)nDirect],
+                                Event_strs.EvTypeStrs[(int)rEv.nType],
                                 key);
                         }
                         break;
@@ -701,7 +541,7 @@ internal class Program
                     ZG_CTR_KEY zG_CTR_KEY = array[i];
                     if (!zG_CTR_KEY.fErased)
                     {
-                        streamWriter.WriteLine($"{ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity)}; {Program.KeyTypeAbbrs[(int)zG_CTR_KEY.nType]}; {zG_CTR_KEY.nAccess:X2}");
+                        streamWriter.WriteLine($"{ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity)}; {Event_strs.KeyTypeAbbrs[(int)zG_CTR_KEY.nType]}; {zG_CTR_KEY.nAccess:X2}");
                     }
                 }
                 streamWriter.Close();
@@ -751,7 +591,7 @@ internal class Program
                     ZG_CTR_KEY zG_CTR_KEY = array[j % array.Length];
                     if (!zG_CTR_KEY.fErased)
                     {
-                        Console.WriteLine("{0} {1}, {2}, access: {3:X2}h.", j, ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity), Program.KeyTypeStrs[(int)zG_CTR_KEY.nType], zG_CTR_KEY.nAccess);
+                        Console.WriteLine("{0} {1}, {2}, access: {3:X2}h.", j, ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity), Event_strs.KeyTypeStrs[(int)zG_CTR_KEY.nType], zG_CTR_KEY.nAccess);
                     }
                 }
             }
