@@ -1,4 +1,4 @@
-﻿// CtrKeys.Program
+// CtrKeys.Program
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,6 +10,7 @@ using ZPort;
 
 internal class Program
 {
+    
     // VARS ANS STRUCTS =============================================
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MYKEY
@@ -69,45 +70,45 @@ internal class Program
     public static readonly string[] EvTypeStrs =
     {
             "",
-            "Открыто кнопкой изнутри",
-            "Ключ не найден в банке ключей",
-            "Ключ найден, дверь открыта",
-            "Ключ найден, доступ не разрешен",
-            "Открыто оператором по сети",
-            "Ключ найден, дверь заблокирована",
-            "Попытка открыть заблокированную дверь кнопкой",
-            "Дверь взломана",
-            "Дверь оставлена открытой (timeout)",
-            "Проход состоялся",
-            "Сработал датчик 1",
-            "Сработал датчик 2",
-            "Перезагрузка контроллера",
-            "Заблокирована кнопка открывания",
-            "Попытка двойного прохода",
-            "Дверь открыта штатно",
-            "Дверь закрыта",
-            "Пропало питание",
-            "Включение электропитания",
-            "Включение электропитания",
-            "Включение замка (триггер)",
-            "Отключение замка (триггер)",
-            "Изменение состояния Режим",
-            "Изменение состояния Пожара",
-            "Изменение состояния Охраны",
-            "Неизвестный ключ",
-            "Совершен вход в шлюз",
-            "Заблокирован вход в шлюз (занят)",
-            "Разрешен вход в шлюз",
-            "Заблокирован проход (Антипассбек)",
-            "Hotel40",
-            "Hotel41"
+            "1: Открыто кнопкой изнутри",
+            "2: Ключ не найден в банке ключей",
+            "3: Ключ найден, дверь открыта",
+            "4: Ключ найден, доступ не разрешен",
+            "5: Открыто оператором по сети",
+            "6: Ключ найден, дверь заблокирована",
+            "7: Попытка открыть заблокированную дверь кнопкой",
+            "8: Дверь взломана",
+            "9: Дверь оставлена открытой (timeout)",
+            "10: Проход состоялся",
+            "11: Сработал датчик 1",
+            "12: Сработал датчик 2",
+            "13: Перезагрузка контроллера",
+            "14: Заблокирована кнопка открывания",
+            "15: Попытка двойного прохода",
+            "16: Дверь открыта штатно",
+            "17: Дверь закрыта",
+            "18: Пропало питание",
+            "19: Включение электропитания",
+            "20: Включение электропитания",
+            "21: Включение замка (триггер)",
+            "22: Отключение замка (триггер)",
+            "23: Изменение состояния Режим",
+            "24: Изменение состояния Пожара",
+            "25: Изменение состояния Охраны",
+            "26: Неизвестный ключ",
+            "27: Совершен вход в шлюз",
+            "28: Заблокирован вход в шлюз (занят)",
+            "29: Разрешен вход в шлюз",
+            "30: Заблокирован проход (Антипассбек)",
+            "31: Hotel40",
+            "32: Hotel41"
     };
 
     public static readonly string[] DirectStrs =
     {
             "",
-            "Вход",
-            "Выход"
+            "IN",
+            "OUT"
     };
 
     public static readonly string[] EcSubEvStrs =
@@ -228,78 +229,7 @@ internal class Program
 
     public static int m_nAppReadEventIdx;
 
-    // HELPERS =======================================================
-    private static bool ParseKeyNum(ref byte[] rKeyNum, string sText)
-    {
-        int num = sText.IndexOf(',');
-        if (num != -1)
-        {
-            string[] array = sText.Split(new char[3]
-            {
-                ',',
-                '[',
-                ']'
-            }, StringSplitOptions.RemoveEmptyEntries);
-            int num2 = int.Parse(array[1]);
-        }
-        string[] array2 = sText.Split(',');
-        if (array2.Length == 2)
-        {
-            byte b = Convert.ToByte(array2[0]);
-            ushort num3 = Convert.ToUInt16(array2[1]);
-            rKeyNum[0] = 3;
-            rKeyNum[1] = (byte)num3;
-            rKeyNum[2] = (byte)(num3 >> 8);
-            rKeyNum[3] = b;
-            num = sText.IndexOf('[');
-            if (num != -1)
-            {
-                int num2 = sText.IndexOf(']', num + 1);
-                int num4 = default(int);
-                if (num2 != -1 && int.TryParse(sText.Substring(num + 1, num2 - num - 1), NumberStyles.HexNumber, (IFormatProvider)CultureInfo.InvariantCulture, out num4))
-                {
-                    rKeyNum[4] = (byte)num4;
-                    rKeyNum[5] = (byte)(num4 >> 8);
-                    rKeyNum[0] = 5;
-                }
-            }
-        }
-        else
-        {
-            int num5 = 1;
-            for (int num6 = sText.Length - 2; num6 >= 0; num6 -= 2)
-            {
-                rKeyNum[num5] = byte.Parse(string.Concat(sText[num6], sText[num6 + 1]), NumberStyles.HexNumber);
-                if (++num5 > 6)
-                {
-                    break;
-                }
-            }
-            rKeyNum[0] = (byte)(num5 - 1);
-        }
-        return true;
-    }
-
-    private static byte[] StructureToByteArray(object obj)
-    {
-        int num = Marshal.SizeOf(obj);
-        byte[] array = new byte[num];
-        IntPtr intPtr = Marshal.AllocHGlobal(num);
-        Marshal.StructureToPtr(obj, intPtr, true);
-        Marshal.Copy(intPtr, array, 0, num);
-        Marshal.FreeHGlobal(intPtr);
-        return array;
-    }
-
-    private static void ByteArrayToStructure(byte[] bytearray, ref object obj)
-    {
-        int num = Marshal.SizeOf(obj);
-        IntPtr intPtr = Marshal.AllocHGlobal(num);
-        Marshal.Copy(bytearray, 0, intPtr, num);
-        obj = Marshal.PtrToStructure(intPtr, obj.GetType());
-        Marshal.FreeHGlobal(intPtr);
-    }
-
+   
     private static void DoClearKeyCache()
     {
         File.Delete($"ctr{Program.m_nSn}_keys.bin");
@@ -324,7 +254,7 @@ internal class Program
             for (int i = 0; i < aList.Length; i++)
             {
                 fileStream.Read(array, 0, array.Length);
-                Program.ByteArrayToStructure(array, ref obj);
+                Helpers.ByteArrayToStructure(array, ref obj);
                 aList[i] = (ZG_CTR_KEY)obj;
             }
             fileStream.Close();
@@ -357,7 +287,7 @@ internal class Program
                     array2.CopyTo(aList, num3);
                     for (int k = 0; k < num; k++)
                     {
-                        byte[] array3 = Program.StructureToByteArray(array2[k]);
+                        byte[] array3 = Helpers.StructureToByteArray(array2[k]);
                         fileStream2.Write(array3, 0, array3.Length);
                     }
                 }
@@ -365,7 +295,7 @@ internal class Program
                 {
                     ZG_CTR_KEY zG_CTR_KEY = default(ZG_CTR_KEY);
                     zG_CTR_KEY.fErased = true;
-                    byte[] array3 = Program.StructureToByteArray(zG_CTR_KEY);
+                    byte[] array3 = Helpers.StructureToByteArray(zG_CTR_KEY);
                     for (int l = num; l < Program.m_nMaxKeys; l++)
                     {
                         fileStream2.Write(array3, 0, array3.Length);
@@ -379,10 +309,10 @@ internal class Program
         return true;
     }
 
-    private static bool GetNewList(ref List<MYKEY> oList)
+    private static bool GetNewList(string text, ref List<MYKEY> oList)
     {
-        Console.WriteLine("Enter file name:");
-        string text = Console.ReadLine();
+        // onsole.WriteLine("Enter file name:");
+        // string text = Console.ReadLine();
         if (text == "")
         {
             Console.WriteLine("Canceled.");
@@ -398,15 +328,14 @@ internal class Program
         string text2;
         while ((text2 = streamReader.ReadLine()) != null)
         {
+            Console.WriteLine(text2);
             string[] array = text2.Split(';');
             if (array.Length != 0)
             {
                 MYKEY mYKEY = default(MYKEY);
                 mYKEY.m_Num = new byte[16];
-                if (Program.ParseKeyNum(ref mYKEY.m_Num, array[1]))
-                {
-                    Console.WriteLine(array[1]);
-                    Console.WriteLine(mYKEY.m_Num);
+                if (Helpers.ParseKeyNum(ref mYKEY.m_Num, array[1]))
+                {                  
                     mYKEY.m_nType = ZG_CTR_KEY_TYPE.ZG_KEY_NORMAL;
                     mYKEY.m_nAccess = 255u;
                     if (array.Length >= 1)
@@ -452,18 +381,18 @@ internal class Program
         return 0;
     }
 
-    private static int FindEraised(ref ZG_CTR_KEY[] aList, int nStart, int nBank)
+    // Поиск свободной ячейки в списке ключей Sdk
+    static int FindEraised(ref ZG_CTR_KEY[] aList, int nStart, int nBank)
     {
-        int num = nBank * Program.m_nMaxKeys;
-        int num2 = num + Program.m_nMaxKeys;
-        for (int i = num + nStart; i < num2; i++)
+        int n = (nBank * m_nMaxKeys);
+        int nEnd = (n + m_nMaxKeys);
+        for (int i = (n + nStart); i < nEnd; i++)
         {
+            Console.WriteLine("{0}  {1}",m_nMaxKeys, aList[i].fErased);
             if (aList[i].fErased)
-            {
                 return i;
-            }
         }
-        return -1;
+        return 1;
     }
 
     private static void SetCtrList(ref ZG_CTR_KEY[] aList, ref bool[] aSync)
@@ -515,7 +444,7 @@ internal class Program
             FileStream fileStream = new FileStream($"ctr{Program.m_nSn}_keys.bin", FileMode.Create, FileAccess.Write);
             for (int k = 0; k < aList.Length; k++)
             {
-                byte[] array2 = Program.StructureToByteArray(aList[k]);
+                byte[] array2 = Helpers.StructureToByteArray(aList[k]);
                 fileStream.Write(array2, 0, array2.Length);
             }
             fileStream.Close();
@@ -529,7 +458,7 @@ internal class Program
     public static void WriteByteArray(byte[] bytes, string name)
     {
         Console.WriteLine(name);
-        Console.WriteLine("--------------------------------".Substring(0, Math.Min(name.Length, "--------------------------------".Length)));
+        Console.WriteLine("------------------------".Substring(0, Math.Min(name.Length, "--------------------------------".Length)));
         Console.WriteLine(BitConverter.ToString(bytes));
         Console.WriteLine();
     }
@@ -649,18 +578,31 @@ internal class Program
                         break;
                     default:
                         {
+
                             ZG_EV_TIME rTime = new ZG_EV_TIME();
                             ZG_CTR_DIRECT nDirect = new ZG_CTR_DIRECT();
+
                             int nKeyIdx = 0;
                             int nKeyBank = 0;
+                            string key = "";
+                            ZG_CTR_KEY[] array = new ZG_CTR_KEY[1];
+
                             ZGIntf.ZG_Ctr_DecodePassEvent(m_hCtr, rEv.aData, ref rTime, ref nDirect, ref nKeyIdx, ref nKeyBank);
-                            Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} {7} (key_idx: {8}, bank#: {9})",
+                            int keyIndex = nKeyIdx;
+                            int num = ZGIntf.ZG_Ctr_ReadKeys(m_hCtr, keyIndex, array, 1, null, IntPtr.Zero, nKeyBank);
+
+                            ZG_CTR_KEY zG_CTR_KEY = array[keyIndex % array.Length];
+                            if (!zG_CTR_KEY.fErased)
+                            {
+                                key = ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity);
+                            }
+                        Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} {7} (key: {8})",
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
                                 rTime.nHour, rTime.nMinute, rTime.nSecond,
                                 DirectStrs[(int)nDirect],
                                 EvTypeStrs[(int)rEv.nType],
-                                nKeyIdx, nKeyBank);
+                                key);
                         }
                         break;
                 }
@@ -670,83 +612,75 @@ internal class Program
     }
 
     // MAIN FUNCTIONS ======================================================================
-    private static void DoLoadKeysFromFile()
-    {
-        List<MYKEY> list = new List<MYKEY>();
-        ZG_CTR_KEY[] array = null;
-        if (Program.GetNewList(ref list) && Program.GetCtrList(ref array))
+           static void DoLoadKeysFromFile(string fileName)
         {
-            for (int i = 0; i < list.Count; i++)
+            System.Collections.Generic.List<MYKEY> oNewList = new System.Collections.Generic.List<MYKEY>();
+            ZG_CTR_KEY[] aCtrList = null;
+            if (!GetNewList(fileName, ref oNewList))
+                return;
+            if (!GetCtrList(ref aCtrList))
+                return;
+            MyKeysComparer mkc = new MyKeysComparer();
+            oNewList.Sort(mkc);
+            bool[] aSync = new bool[aCtrList.Length];
+            ZG_CTR_KEY rCK;
+            MYKEY rMK = new MYKEY();
+            int nIdx;
+            // Удаляем из CtrList ключи, которых нет в NewList
+            for (int i = 0; i < aCtrList.Length; i++)
             {
-                Program.WriteByteArray(list[i].m_Num, "arrayOne");
-            }
-            MyKeysComparer comparer = new MyKeysComparer();
-            list.Sort(comparer);
-            bool[] array2 = new bool[array.Length];
-            MYKEY mYKEY = default(MYKEY);
-            ZG_CTR_KEY zG_CTR_KEY;
-            for (int j = 0; j < array.Length; j++)
-            {
-                zG_CTR_KEY = array[j];
-                if (zG_CTR_KEY.fErased)
+                rCK = aCtrList[i];
+                if (rCK.fErased)
                 {
-                    array2[j] = true;
+                    aSync[i] = true;
+                    continue;
                 }
-                else
+                rMK.m_Num = rCK.rNum;
+                nIdx = oNewList.BinarySearch(rMK, mkc);
+                if (nIdx > 0)
                 {
-                    mYKEY.m_Num = zG_CTR_KEY.rNum;
-                    int num = list.BinarySearch(mYKEY, comparer);
-                    if (num != -1)
+                    rMK = oNewList[nIdx];
+                    if ((rCK.nType != rMK.m_nType) || (rCK.nAccess != rMK.m_nAccess))
                     {
-                        mYKEY = list[num];
-                        if (zG_CTR_KEY.nType != mYKEY.m_nType || zG_CTR_KEY.nAccess != mYKEY.m_nAccess)
-                        {
-                            array[j].nType = mYKEY.m_nType;
-                            array[j].nAccess = mYKEY.m_nAccess;
-                        }
-                        else
-                        {
-                            array2[j] = true;
-                        }
-                        list.RemoveAt(num);
+                        aCtrList[i].nType = rMK.m_nType;
+                        aCtrList[i].nAccess = rMK.m_nAccess;
                     }
                     else
-                    {
-                        array[j].fErased = true;
-                    }
+                        aSync[i] = true;
+                    oNewList.RemoveAt(nIdx);
                 }
+                else
+                    aCtrList[i].fErased = true;
             }
-            int[] array3 = new int[Program.m_nMaxBanks];
-            for (int k = 0; k < array3.Length; k++)
+            // Добавляем из NewList в CtrList ключи, которых нет в CtrList
+            int[] aNext = new int[m_nMaxBanks];
+            for (int i = 0; i < aNext.Length; i++)
+                aNext[i] = 0;
+            for (int i = 0; i < oNewList.Count; i++)
             {
-                array3[k] = 0;
-            }
-            for (int l = 0; l < list.Count; l++)
-            {
-                mYKEY = list[l];
-                for (int m = 0; m < Program.m_nMaxBanks; m++)
+                rMK = oNewList[i];
+                for (int j = 0; j < m_nMaxBanks; j++)
                 {
-                    int num = Program.FindEraised(ref array, array3[m], m);
-                    if (num == -1)
+                    nIdx = FindEraised(ref aCtrList, aNext[j], j);
+                    if (nIdx == -1)
                     {
-                        Console.WriteLine("Keys list overflow (bank: {0}).", m);
+                        Console.WriteLine("Список ключей переполнен (банк: {0}).", j);
                         Console.ReadLine();
                         return;
                     }
-                    zG_CTR_KEY = array[num];
-                    zG_CTR_KEY.fErased = false;
-                    zG_CTR_KEY.rNum = mYKEY.m_Num;
-                    zG_CTR_KEY.nType = mYKEY.m_nType;
-                    zG_CTR_KEY.nAccess = mYKEY.m_nAccess;
-                    array[num] = zG_CTR_KEY;
-                    array2[num] = false;
-                    array3[m] = num + 1;
+                    rCK = aCtrList[nIdx];
+                    rCK.fErased = false;
+                    rCK.rNum = rMK.m_Num;
+                    rCK.nType = rMK.m_nType;
+                    rCK.nAccess = rMK.m_nAccess;
+                    aCtrList[nIdx] = rCK;
+                    aSync[nIdx] = false;
+                    aNext[j] = (nIdx + 1);
                 }
             }
-            Program.SetCtrList(ref array, ref array2);
-            Console.WriteLine("Success.");
+            SetCtrList(ref aCtrList, ref aSync);
+            Console.WriteLine("Успешно.");
         }
-    }
 
     private static void DoSaveKeysToFile()
     {
@@ -872,7 +806,7 @@ internal class Program
                     return;
                 }
             }
-            else if (!Program.ParseKeyNum(ref Program.m_rFindNum, array[1]))
+            else if (!Helpers.ParseKeyNum(ref Program.m_rFindNum, array[1]))
             {
                 Console.WriteLine("Wrong enter.");
                 return;
@@ -986,7 +920,7 @@ internal class Program
                             return false;
                         }
                     }
-                    else if (!Program.ParseKeyNum(ref array2[0].rNum, Program.codeTxt2Hex(array[1])))
+                    else if (!Helpers.ParseKeyNum(ref array2[0].rNum, Program.codeTxt2Hex(array[1])))
                     {
                         Console.WriteLine("Wrong enter.");
                         return false;
@@ -1106,7 +1040,7 @@ internal class Program
         else
             nNewCount = (m_nCtrMaxEvents - m_nAppReadEventIdx + nWrIdx);
         if (nNewCount == 0)
-            Console.WriteLine("Нет новых событий ({0}-{1}).", nRdIdx, nWrIdx);
+            Console.WriteLine("{\"result\":\"empty\"}");
         else
             Console.WriteLine("Доступно {0} новых событий ({1}-{2}).", nNewCount, nRdIdx, nWrIdx);
         int nShowCount;
@@ -1118,15 +1052,29 @@ internal class Program
             ShowEvents(m_nAppReadEventIdx, nShowCount);
             nNewCount -= nShowCount;
             m_nAppReadEventIdx = (m_nAppReadEventIdx + nShowCount) % m_nCtrMaxEvents;
-            Console.WriteLine("Нажмите Enter для продолжения или 'x' для прерывания.");
-            String s = Console.ReadLine();
-            if (s == "x")
-            {
-                Console.WriteLine("Прервано.");
-                return;
-            }
+            // Console.WriteLine("Нажмите Enter для продолжения или 'x' для прерывания.");
+            // String s = Console.ReadLine();
+            // if (s == "x")
+            // {
+            //    Console.WriteLine("Прервано.");
+            //    DoRestoreFactorySettings();
+            //    return;
+            // }
         }
-        Console.WriteLine("Успешно.");
+        DoRestoreFactorySettings();
+    }
+
+    static void DoRestoreFactorySettings()
+    {
+        int hr;
+        hr = ZGIntf.ZG_Ctr_WriteEventIdxs(m_hCtr, 0x3, 0, 0);
+        if (hr < 0)
+        {
+            Console.WriteLine("Ошибка ZG_Ctr_WriteEventIdxs ({0}).", hr);
+            Console.ReadLine();
+            return;
+        }
+        m_nAppReadEventIdx = 0;
     }
 
     // MESSAGES AND THREADS =================================================================================================
@@ -1193,6 +1141,7 @@ internal class Program
         if (args.Length < 2)
         {
             Console.WriteLine("Need more argumetns, <mode> <address:port>");
+            Console.ReadLine();
             Program.StopNotifyThread();
             if (Program.m_hCtr != IntPtr.Zero)
             {
@@ -1253,8 +1202,8 @@ internal class Program
                                 Program.m_nMaxKeys = zG_CTR_INFO.nMaxKeys;
                                 Program.m_nOptRead = zG_CTR_INFO.nOptReadItems;
                                 Program.m_nOptWrite = zG_CTR_INFO.nOptWriteItems;
-                                Console.WriteLine("{0} Address: {1}, s/n: {2}, v{3}.{4}, Bank count: {5}, Key Types: {6}.", Program.CtrTypeStrs[(int)zG_CTR_INFO.nType], zG_CTR_INFO.nAddr, zG_CTR_INFO.nSn, zG_CTR_INFO.nVersion & 0xFF, zG_CTR_INFO.nVersion >> 8 & 0xFF, Program.m_nMaxBanks, Program.KeyModeStrs[Program.m_fProximity ? 1 : 0]);
-                                 Program.m_oEvent = new ManualResetEvent(false);
+                                // Console.WriteLine("{0} Address: {1}, s/n: {2}, v{3}.{4}, Bank count: {5}, Key Types: {6}.", Program.CtrTypeStrs[(int)zG_CTR_INFO.nType], zG_CTR_INFO.nAddr, zG_CTR_INFO.nSn, zG_CTR_INFO.nVersion & 0xFF, zG_CTR_INFO.nVersion >> 8 & 0xFF, Program.m_nMaxBanks, Program.KeyModeStrs[Program.m_fProximity ? 1 : 0]);
+                                Program.m_oEvent = new ManualResetEvent(false);
                                 ZG_CTR_NOTIFY_SETTINGS pSettings = new ZG_CTR_NOTIFY_SETTINGS(4u, Program.m_oEvent.SafeWaitHandle, IntPtr.Zero, 0u, 0, 3000u, 0u);
                                 num2 = ZGIntf.ZG_Ctr_SetNotification(Program.m_hCtr, pSettings);
                                 if (num2 < 0)
@@ -1265,7 +1214,6 @@ internal class Program
                                 else
                                 {
                                     Program.StartNotifyThread();
-                                    Console.WriteLine("-----");
                                     if (text == "-h")
                                     {
                                         text = "10";
@@ -1293,8 +1241,11 @@ internal class Program
                                                     break;
                                                 }
                                             case 5:
-                                                Program.DoLoadKeysFromFile();
-                                                break;
+                                                { 
+                                                    string keysList = args[2];
+                                                    Program.DoLoadKeysFromFile(keysList);
+                                                    break;
+                                                }
                                             case 6:
                                                 Program.DoSaveKeysToFile();
                                                 break;
@@ -1328,7 +1279,6 @@ internal class Program
                                                 break;
                                         }
                                     }
-                                    Console.WriteLine("-----");
                                 }
                             }
                         }
