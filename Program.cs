@@ -217,8 +217,8 @@ internal class Program
         Console.WriteLine("--show-keys - Show Keys");
         Console.WriteLine("--check-key - Search key by number, -1 last used");
         Console.WriteLine("--border-keys - Top border of the keys...");
-        Console.WriteLine("--add-key {bank},{nIdx | -1},{key_num | -1},{key_type | 1 | 2 | 3 },{access_level | FF} - Setup key...");
-        Console.WriteLine("--add-key-lsit {path_to_list} - Upload new key list in csv format");
+        Console.WriteLine("--add-key {bank} {nIdx | -1} {key_num | -1} {key_type | 1 | 2 | 3 } {access_level | FF} - Setup key...");
+        Console.WriteLine("--add-key-list {path_to_list} - Upload new key list in csv format");
         Console.WriteLine("--save-keys {file_name} - Save keys to file");
         Console.WriteLine("--erase-key {bank},{key_num} - Erase key");
         Console.WriteLine("--erase-key-all - Erase all keys");
@@ -230,16 +230,19 @@ internal class Program
     {
         string command = "10";
         string pszName = null;
-
         // Check arguments == 
         if (args.Length < 1)
         {
             Console.WriteLine("Need more argumetns, <command> [address:port] [cmd parameters]");
         }
-        else
+        else if (args.Length < 2)
         {
             command = args[0];
+        }
+        else
+        {
             pszName = args[1];
+            command = args[0];
         }
 
         // Check SDK version ==
@@ -313,17 +316,6 @@ internal class Program
                                     NotifyTh.StartNotifyThread();
                                     if (command != "")
                                     {
-                                        Console.WriteLine("--show-keys - Show Keys");
-                                        Console.WriteLine("--check-key {bank} {key_num | -1} - Search key by number, -1 last used");
-                                        Console.WriteLine("--border-keys - Top border of the keys...");
-                                        Console.WriteLine("--add-key {bank} {nIdx | -1} {key_num | -1} {key_type | 1 | 2 | 3 } {access_level | FF} - Setup key...");
-                                        Console.WriteLine("--add-key-lsit {path_to_list} - Upload new key list in csv format");
-                                        Console.WriteLine("--save-keys {file_name} - Save keys to file");
-                                        Console.WriteLine("--erase-key {bank} {key_num} - Erase key");
-                                        Console.WriteLine("--erase-key-all - Erase all keys");
-                                        Console.WriteLine("--erase-key-cache - Earse key cache (delete tmp file)");
-                                        Console.WriteLine("--events - Show Events");
-
                                         string bank = "0";
                                         string key_num = "000,00000";
                                         string nIdsx = "-1";
@@ -353,16 +345,16 @@ internal class Program
                                             case "--add-key":
                                                 {
 
-                                                    bank = args[3];
-                                                    key_num = args[5];
-                                                    // nIdsx = args[4];
-                                                    // key_type = args[6];
-                                                    // access_level = args[7];
+                                                    bank = args[2];
+                                                    key_num = args[4];
+                                                    nIdsx = args[3];
+                                                    key_type = args[5];
+                                                    access_level = args[6];
 
                                                     DoActions.DoSetKey(bank, nIdsx, key_num, key_type, access_level);
                                                     break;
                                                 }
-                                            case "--add-key-lsit":
+                                            case "--add-key-list":
                                                 {
                                                     string keysList = args[2];
                                                     DoActions.DoLoadKeysFromFile(keysList);
@@ -386,11 +378,6 @@ internal class Program
                                                     DoActions.DoClearAllKeys();
                                                     break;
                                                 }
-                                            case "--erase-key-cache":
-                                                {
-                                                    DoActions.DoClearKeyCache();
-                                                    break;
-                                                }
                                             case "--events":
                                                 {
                                                     DoActions.DoShowNewEvents();
@@ -407,7 +394,29 @@ internal class Program
                     }
                     else
                     {
-                        ShowHelp();
+                        if (command != "")
+                        {
+                            switch (command)
+                            {
+                                case "--erase-key-cache":
+                                    {
+                                        DoActions.DoClearKeyCache();
+                                        break;
+                                    }
+                                case "--help":
+                                    {
+                                        ShowHelp();
+                                        break;
+                                    }
+                                default:
+                                    Console.WriteLine(Helpers.StringGenerateAnswer("Wrong command, try --help ", false));
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            ShowHelp();
+                        }
                     }
                   }
 
