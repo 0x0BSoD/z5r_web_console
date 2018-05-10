@@ -1,10 +1,90 @@
-// HELPERS =======================================================
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
+using ZGuard;
+
 class Helpers
     {
-        public static bool ParseKeyNum(ref byte[] rKeyNum, string sText)
+    public static void ResetEventsIndex()
+    {
+        int hr;
+        hr = ZGIntf.ZG_Ctr_WriteEventIdxs(Program.m_hCtr, 0x3, 0, 0);
+        if (hr < 0)
+        {
+            Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_WriteEventIdxs", false));
+            return;
+        }
+        Program.m_nAppReadEventIdx = 0;
+    }
+    public static bool FindKeyEnum(int nIdx, ref ZG_CTR_KEY pKey, int nPos, int nMax, IntPtr pUserData)
+    {
+        bool flag = true;
+        int num = (Program.m_rFindNum[0] < 6) ? Program.m_rFindNum[0] : 6;
+        int num2 = 1;
+        while (num2 <= num)
+        {
+            if (Program.m_rFindNum[num2] == pKey.rNum[num2])
+            {
+                num2++;
+                continue;
+            }
+            flag = false;
+            break;
+        }
+        if (flag)
+        {
+            Program.m_nFoundKeyIdx = nIdx;
+            return false;
+        }
+        return true;
+    }
+    public static int FindEraised(ref ZG_CTR_KEY[] aList, int nStart, int nBank)
+    {
+        int n = (nBank * Program.m_nMaxKeys);
+        int nEnd = (n + Program.m_nMaxKeys);
+
+        Console.WriteLine("Bank: {0}", nBank);
+        Console.WriteLine("n keys: {0}", n);
+        Console.WriteLine("nEnd keys: {0}", nEnd);
+        Console.WriteLine("==============");
+
+        for (int i = (n + nStart); i < nEnd; i++)
+        {
+            if (aList[i].fErased)
+            {
+                return i;
+            }
+            
+        }
+
+        for (int i = (n + nStart); i < nEnd; i++)
+        {
+            if (aList[i].fErased)
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+    public static void WriteByteArray(byte[] bytes, string name)
+    {
+        Console.WriteLine(name);
+        Console.WriteLine("------------------------".Substring(0, Math.Min(name.Length, "--------------------------------".Length)));
+        Console.WriteLine(BitConverter.ToString(bytes));
+        Console.WriteLine();
+    }
+    public static int CompareZKeyNums(Byte[] Left, Byte[] Right)
+    {
+        int n = Math.Min(Left[0], Right[0]);
+        for (int i = n; i > 0; i--)
+            if (Left[i] != Right[i])
+                return (Left[i] > Right[i]) ? 1 : -1;
+        if (Left[0] != Right[0])
+            return (Left[0] > Right[0]) ? 1 : -1;
+        return 0;
+    }
+    public static bool ParseKeyNum(ref byte[] rKeyNum, string sText)
         {
             int num = sText.IndexOf(',');
             if (num != -1)
@@ -74,5 +154,32 @@ class Helpers
             obj = Marshal.PtrToStructure(intPtr, obj.GetType());
             Marshal.FreeHGlobal(intPtr);
         }
-    }
+
+        public static string StringGenerateAnswer(string data, bool status)
+        {
+        var result = new
+        {
+            Status = status ? "ok" : "fail",
+            Data = data
+        };
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public static string codeTxt2Hex(string textCode)
+        {
+            int length = textCode.Length;
+            int num = textCode.IndexOf(",");
+            string value = textCode.Substring(0, num);
+            string value2 = textCode.Substring(num + 1);
+            int num2 = Convert.ToInt32(value);
+            int num3 = Convert.ToInt32(value2);
+            string str = num2.ToString("X");
+            string str2 = num3.ToString("X");
+            string text = "0000" + str2;
+            string str3 = str + text.Substring(text.Length - 4);
+            string text2 = "000000" + str3;
+            return text2.Substring(text2.Length - 6);
+        }
+}
+
 
