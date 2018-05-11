@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using ZGuard;
+
 using Newtonsoft.Json;
+using ZGuard;
 class DoActions
 {
 
@@ -28,7 +29,7 @@ class DoActions
     public static void DoClearKeyCache()
     {
         File.Delete($"ctr{Program.m_nSn}_keys.bin");
-        Console.WriteLine("File delete Success.");
+        Helpers.StringGenerateAnswer("File delete Success", true);
     }
 
     public static void DoSetKey(string bank, string nIdsx, string key_num, string key_type, string access_level)
@@ -46,8 +47,7 @@ class DoActions
             hr = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref nKeyIdx, nBankN);
             if (hr < 0)
             {
-                Console.WriteLine("Ошибка ZG_Ctr_GetKeyTopIndex ({0}).", hr);
-                Console.ReadLine();
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                 return;
             }
         }
@@ -60,24 +60,22 @@ class DoActions
             hr = ZGIntf.ZG_Ctr_ReadLastKeyNum(Program.m_hCtr, aKeys[0].rNum);
             if (hr < 0)
             {
-                Console.WriteLine("Ошибка ZG_Ctr_ReadLastKeyNum ({0}).", hr);
-                Console.ReadLine();
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadLastKeyNum", false);
                 return;
             }
         }
         else if (!Helpers.ParseKeyNum(ref aKeys[0].rNum, key_num))
         {
-            Console.WriteLine("Некорректный ввод.");
             return;
         }
         hr = ZGIntf.ZG_Ctr_WriteKeys(Program.m_hCtr, nKeyIdx, aKeys, 1, null, IntPtr.Zero, nBankN);
         if (hr < 0)
         {
-            Console.WriteLine("Ошибка ZG_Ctr_WriteKeys ({0}).", hr);
-            Console.ReadLine();
+            Helpers.StringGenerateAnswer("Error ZG_Ctr_WriteKeys", false);
             return;
         }
-        Console.WriteLine("Успешно.");
+        Helpers.StringGenerateAnswer(key_num + " set", true);
+
     }
     private static void SetCtrList(ref ZG_CTR_KEY[] aList, ref bool[] aSync)
     {
@@ -114,7 +112,6 @@ class DoActions
                         if (num8 < 0)
                         {
                             Console.WriteLine("Error ZG_Ctr_WriteKeys (bank num {0}) ({1}).", i, num8);
-                            Console.ReadLine();
                             return;
                         }
                         Console.WriteLine("Updated keys {0}-{1} (bank num {2}).", num3, num3 + num6 - 1, i);
@@ -215,7 +212,6 @@ class DoActions
             return false;
         }
         keysList = Path.GetFullPath(keysList);
-        // Console.WriteLine("Banks: {0}", Program.m_nMaxBanks);
         DoActions.DoClearAllKeys();
         for (int i = 0; i < Program.m_nMaxBanks; i++)
         {
@@ -227,7 +223,6 @@ class DoActions
                 if (!text.Contains("#"))
                 {
                     string[] array = text.Split(';');
-                    // Console.WriteLine("bankNum: {3} | keyIndex: {0} | KeyType: {1} | Hex: {2}", num, "1", Helpers.codeTxt2Hex(array[1]), i);
                     int num2 = Convert.ToInt32(i);
                     int num3 = Convert.ToInt32(num);
                     int nType = Convert.ToInt32("1");
@@ -268,7 +263,6 @@ class DoActions
                         Console.WriteLine("Error ZG_Ctr_WriteKeys ({0}).", num5);
                         return false;
                     }
-                    // Console.WriteLine("Succes.");
                     num++;
                 }
             }
@@ -324,18 +318,18 @@ class DoActions
                 num3 = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref num2, num);
                 if (num3 < 0)
                 {
-                    Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false));
+                    Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                     return;
                 }
                 if (num2 == 0)
                 {
-                    Console.WriteLine(Helpers.StringGenerateAnswer("keys list empty", true));
+                    Helpers.StringGenerateAnswer("keys list empty", true);
                     return;
                 }
                 num3 = ZGIntf.ZG_Ctr_ClearKeys(Program.m_hCtr, 0, num2, null, IntPtr.Zero, num, true);
                 if (num3 >= 0)
                 {
-                    Console.WriteLine(Helpers.StringGenerateAnswer("keys cleared", true));
+                    Helpers.StringGenerateAnswer("keys cleared", true);
                     num++;
                     continue;
                 }
@@ -343,7 +337,7 @@ class DoActions
             }
             return;
         }
-        Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_ClearKeys", false));
+        Helpers.StringGenerateAnswer("Error ZG_Ctr_ClearKeys", false);
     }
 
     public static void DoShowNewEvents()
@@ -356,7 +350,7 @@ class DoActions
         hr = ZGIntf.ZG_Ctr_ReadEventIdxs(Program.m_hCtr, ref nWrIdx, ref nRdIdx);
         if (hr < 0)
         {
-            Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadEventIdxs", false));
+            Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadEventIdxs", false);
             return;
         }
         int nNewCount;
@@ -366,7 +360,7 @@ class DoActions
             nNewCount = (Program.m_nCtrMaxEvents - Program.m_nAppReadEventIdx + nWrIdx);
         if (nNewCount == 0)
         {
-            Console.WriteLine(Helpers.StringGenerateAnswer("empty", true));
+            Helpers.StringGenerateAnswer("empty", true);
             return;
         }
         int nShowCount;
@@ -383,7 +377,7 @@ class DoActions
         }
 
         string output = "[" + String.Join(",", ls_result) + "]";
-        Console.WriteLine(output);
+        Helpers.StringGenerateAnswer(output, true);
         Helpers.ResetEventsIndex();
     }
     static List<string> ShowEvents(int nStart, int nCount)
@@ -407,9 +401,7 @@ class DoActions
             hr = ZGIntf.ZG_Ctr_ReadEvents(Program.m_hCtr, nIdx, aEvents, nCnt, null, IntPtr.Zero);
             if (hr < 0)
             {
-                Console.WriteLine("Error ZG_Ctr_ReadEvents ({0}).", hr);
-                Console.ReadLine();
-                // ls_result.Add("result");
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadEvents", false);
             }
             for (int j = 0; j < nCnt; j++)
             {
@@ -423,7 +415,10 @@ class DoActions
                             ZG_EC_SUB_EV nSubEvent = new ZG_EC_SUB_EV();
                             UInt32 nPowerFlags = 0;
                             ZGIntf.ZG_Ctr_DecodeEcEvent(Program.m_hCtr, rEv.aData, ref rTime, ref nSubEvent, ref nPowerFlags);
-                            // ls_result.Add("result");
+
+                            Helpers.StringGenerateAnswer(Event_strs.EvTypeStrs[(int)rEv.nType], true);
+
+                            // For debug
                             Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} Sub_event: {7} Power flags: {8:X2}h",
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
@@ -438,7 +433,10 @@ class DoActions
                             ZG_FIRE_SUB_EV nSubEvent = new ZG_FIRE_SUB_EV();
                             UInt32 nFireFlags = 0;
                             ZGIntf.ZG_Ctr_DecodeFireEvent(Program.m_hCtr, rEv.aData, ref rTime, ref nSubEvent, ref nFireFlags);
-                            // ls_result.Add("result");
+
+                            Helpers.StringGenerateAnswer(Event_strs.EvTypeStrs[(int)rEv.nType], true);
+
+                            // For debug
                             Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} Sub_event: {7} Fire flags: {8:X2}h",
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
@@ -453,7 +451,10 @@ class DoActions
                             ZG_SECUR_SUB_EV nSubEvent = new ZG_SECUR_SUB_EV();
                             UInt32 nSecurFlags = 0;
                             ZGIntf.ZG_Ctr_DecodeSecurEvent(Program.m_hCtr, rEv.aData, ref rTime, ref nSubEvent, ref nSecurFlags);
-                            // ls_result.Add("result");
+
+                            Helpers.StringGenerateAnswer(Event_strs.EvTypeStrs[(int)rEv.nType], true);
+
+                            // For debug
                             Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} Sub_event: {7} Security flags: {8:X2}h",
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
@@ -468,7 +469,10 @@ class DoActions
                             ZG_CTR_MODE nMode = new ZG_CTR_MODE();
                             ZG_MODE_SUB_EV nSubEvent = new ZG_MODE_SUB_EV();
                             ZGIntf.ZG_Ctr_DecodeModeEvent(Program.m_hCtr, rEv.aData, ref rTime, ref nMode, ref nSubEvent);
-                            // ls_result.Add("result");
+
+                            Helpers.StringGenerateAnswer(Event_strs.EvTypeStrs[(int)rEv.nType], true);
+
+                            // For debug
                             Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} Mode: {7} Sub_event: {8}",
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,
@@ -482,8 +486,10 @@ class DoActions
                         {
                             Byte[] rKeyNum = new Byte[16];
                             ZGIntf.ZG_Ctr_DecodeUnkKeyEvent(Program.m_hCtr, rEv.aData, rKeyNum);
-                            // ls_result.Add("result");
+
                             key = ZGIntf.CardNumToStr(rKeyNum, Program.m_fProximity);
+                            Helpers.StringGenerateAnswer("Unknown key: " + key, true);
+
                         }
                         break;
                     case ZG_CTR_EV_TYPE.ZG_EV_HOTEL40:
@@ -494,7 +500,10 @@ class DoActions
                             ZG_HOTEL_SUB_EV nSubEvent = new ZG_HOTEL_SUB_EV();
                             UInt32 nFlags = new UInt32();
                             ZGIntf.ZG_DecodeHotelEvent(rEv.aData, ref rTime, ref nMode, ref nSubEvent, ref nFlags);
-                            // ls_result.Add("result");
+
+                            Helpers.StringGenerateAnswer(Event_strs.EvTypeStrs[(int)rEv.nType], true);
+
+                            // For debug
                             Console.WriteLine("{0}. {1:D2}.{2:D2} {3:D2}:{4:D2}:{5:D2} {6} Mode: {7} Sub_event: {8} flags: {9:X2}h",
                                 nIdx + j,
                                 rTime.nDay, rTime.nMonth,

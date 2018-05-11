@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
+
 using Newtonsoft.Json;
 using ZGuard;
 
@@ -12,7 +13,7 @@ class Helpers
         hr = ZGIntf.ZG_Ctr_WriteEventIdxs(Program.m_hCtr, 0x3, 0, 0);
         if (hr < 0)
         {
-            Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_WriteEventIdxs", false));
+            Helpers.StringGenerateAnswer("Error ZG_Ctr_WriteEventIdxs", false);
             return;
         }
         Program.m_nAppReadEventIdx = 0;
@@ -155,14 +156,16 @@ class Helpers
             Marshal.FreeHGlobal(intPtr);
         }
 
-        public static string StringGenerateAnswer(string data, bool status)
+        public static void StringGenerateAnswer(object data, bool status)
         {
-        var result = new
-        {
-            Status = status ? "ok" : "fail",
-            Data = data
-        };
-            return JsonConvert.SerializeObject(result);
+            var result = new
+            {
+                Status = status ? "ok" : "fail",
+                Data = data
+            };
+
+            Console.WriteLine(JsonConvert.SerializeObject(result));
+
         }
 
         public static string codeTxt2Hex(string textCode)

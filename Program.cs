@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+
+using Newtonsoft.Json;
 using ZGuard;
 using ZPort;
 
@@ -22,8 +24,6 @@ internal class Program
     public static int m_nOptRead;
     public static int m_nOptWrite;
     public static int m_nCtrMaxEvents;
-    // public static UInt32 m_nCtrFlags;
-    // public static bool m_fCtrNotifyEnabled;
     public static int m_nAppReadEventIdx;
 
     private static bool ZgProcessCb(int nPos, int nMax, IntPtr pUserData)
@@ -51,7 +51,6 @@ internal class Program
         }
         else
         {
-            Console.WriteLine("Reading keys from controller...");
             FileStream fileStream2 = new FileStream(path, FileMode.Create, FileAccess.Write);
             int num = 0;
             for (int j = 0; j < Program.m_nMaxBanks; j++)
@@ -59,7 +58,7 @@ internal class Program
                 int num2 = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref num, j);
                 if (num2 < 0)
                 {
-                    Console.WriteLine("Error ZG_Ctr_GetKeyTopIndex (bank num {0}) ({1}).", j, num2);
+                    Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                     return false;
                 }
                 int num3 = j * Program.m_nMaxKeys;
@@ -69,7 +68,7 @@ internal class Program
                     num2 = ZGIntf.ZG_Ctr_ReadKeys(Program.m_hCtr, 0, array2, num, Program.ZgProcessCb, (IntPtr)0, j);
                     if (num2 < 0)
                     {
-                        Console.WriteLine("Error ZG_Ctr_ReadKeys (bank num {0}) ({1}).", j, num2);
+                        Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadKeys", false);
                         return false;
                     }
                     array2.CopyTo(aList, num3);
@@ -92,7 +91,6 @@ internal class Program
                 }
             }
             fileStream2.Close();
-            Console.WriteLine(" done.");
         }
         return true;
     }
@@ -101,12 +99,12 @@ internal class Program
     {
         if (fileName == "")
         {
-            Console.WriteLine("Canceled.");
             return false;
         }
         if (!File.Exists(fileName))
         {
             Console.WriteLine("File not Found");
+            Helpers.StringGenerateAnswer(fileName + " not Found", false);
             return false;
         }
         string path_to_file = Path.GetFullPath(fileName);
@@ -154,17 +152,18 @@ internal class Program
         ZG_CTR_KEY[] array = new ZG_CTR_KEY[6];
         for (int i = 0; i < Program.m_nMaxBanks; i++)
         {
-            Console.WriteLine("------------");
-            Console.WriteLine("Bank num {0}:", i);
+
+            List<string> keys = new List<string>();
+
             int num2 = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref num, i);
             if (num2 < 0)
             {
-                Console.WriteLine("Error ZG_Ctr_GetKeyTopIndex (Bank number {0}) ({1}).", i, num2);
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                 return;
             }
             if (num == 0)
             {
-                Console.WriteLine("List Empty.");
+                Helpers.StringGenerateAnswer("List Empty", true);
             }
             else
             {
@@ -180,55 +179,73 @@ internal class Program
                         num2 = ZGIntf.ZG_Ctr_ReadKeys(Program.m_hCtr, j, array, num3, null, IntPtr.Zero, i);
                         if (num2 < 0)
                         {
-                            Console.WriteLine("Error ZG_Ctr_ReadKeys (Bank number {0}) ({1}).", i, num2);
+                            Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadKeys", false);
                             return;
                         }
                     }
                     ZG_CTR_KEY zG_CTR_KEY = array[j % array.Length];
+
+                    
+
                     if (!zG_CTR_KEY.fErased)
                     {
-                        Console.WriteLine("{0} {1}, {2}, access: {3:X2}h.", j, ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity), Event_strs.KeyTypeStrs[(int)zG_CTR_KEY.nType], zG_CTR_KEY.nAccess);
+                        keys.Add(ZGIntf.CardNumToStr(zG_CTR_KEY.rNum, Program.m_fProximity));
                     }
                 }
             }
+            var result = new
+            {
+                Bank = i,
+                keys = keys
+            };
+            Helpers.StringGenerateAnswer(result, true);
         }
-        Console.WriteLine("Success.");
     }
     
     private static void ShowKeyTopIndex()
     {
-        Console.WriteLine("Getting top border of the keys...");
         int num = 0;
+        List<Object> result = new List<object>(); 
         for (int i = 0; i < Program.m_nMaxBanks; i++)
         {
             int num2 = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref num, i);
             if (num2 < 0)
             {
-                Console.WriteLine("Error ZG_Ctr_GetKeyTopIndex ({0}).", num2);
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                 break;
             }
-            Console.WriteLine("Bank {0}: {1}", i, num);
+            var bank_data = new 
+            {
+                Bank = i,
+                top_index = num
+            };
+            result.Add(bank_data);
         }
-        Console.WriteLine("Done.");
+        Helpers.StringGenerateAnswer(result, true);
+
+
     }
 
     private static void ShowHelp()
     {
-        Console.WriteLine("--show-keys - Show Keys");
-        Console.WriteLine("--check-key - Search key by number, -1 last used");
-        Console.WriteLine("--border-keys - Top border of the keys...");
-        Console.WriteLine("--add-key {bank} {nIdx | -1} {key_num | -1} {key_type | 1 | 2 | 3 } {access_level | FF} - Setup key...");
-        Console.WriteLine("--add-key-list {path_to_list} - Upload new key list in csv format");
-        Console.WriteLine("--save-keys {file_name} - Save keys to file");
-        Console.WriteLine("--erase-key {bank},{key_num} - Erase key");
-        Console.WriteLine("--erase-key-all - Erase all keys");
+        Console.WriteLine("= Help ============================");
+        Console.WriteLine("--show-keys       - Show Keys");
+        Console.WriteLine("--check-key       - Search key by number, -1 last used");
+        Console.WriteLine("--border-keys     - Top border of the keys...");
+        Console.WriteLine("--erase-key-all   - Erase all keys");
         Console.WriteLine("--erase-key-cache - Earse key cache (delete tmp file)");
-        Console.WriteLine("--events - Show Events");
+        Console.WriteLine("--events             - Show Events");
+        Console.WriteLine("=============================");
+        Console.WriteLine("--add-key {bank} {nIdx | -1} {key_num | -1} {key_type | 1 | 2 | 3 } {access_level | FF} - Setup key");
+        Console.WriteLine("--add-key-list {path_to_list}  - Upload new key list in csv format");
+        Console.WriteLine("--save-keys {file_name}        - Save keys to file");
+        Console.WriteLine("--erase-key {bank} {key_index} - Erase key by index");
     }
     // ENTRY POINT ============================================================
     private static void Main(string[] args)
     {
-        string command = "10";
+        Console.WriteLine();
+        string command = "--help";
         string pszName = null;
         // Check arguments == 
         if (args.Length < 1)
@@ -249,7 +266,7 @@ internal class Program
         UInt32 nVersion = ZGIntf.ZG_GetVersion();
         if ((((nVersion & 0xFF)) != ZGIntf.ZG_SDK_VER_MAJOR) || (((nVersion >> 8) & 0xFF) != ZGIntf.ZG_SDK_VER_MINOR))
         {
-            Console.WriteLine(Helpers.StringGenerateAnswer("SDK Guard Version wrong", false));
+            Helpers.StringGenerateAnswer("SDK Guard Version wrong", false);
             return;
         }
         else
@@ -258,7 +275,7 @@ internal class Program
             int num2 = ZGIntf.ZG_Initialize(1u);
             if (num2 < 0)
             {
-                Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Initialize.", false));
+                Helpers.StringGenerateAnswer("Error ZG_Initialize.", false);
                 return;
             }
             else
@@ -278,7 +295,7 @@ internal class Program
                         num2 = ZGIntf.ZG_Cvt_Open(ref intPtr, ref zG_CVT_OPEN_PARAMS, pInfo);
                         if (num2 < 0)
                         {
-                            Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Cvt_Open.", false));
+                            Helpers.StringGenerateAnswer("Error ZG_Cvt_Open.", false);
                             return;
                         }
                         else
@@ -288,7 +305,7 @@ internal class Program
                             num2 = ZGIntf.ZG_Ctr_Open(ref Program.m_hCtr, intPtr, 2, 0, ref zG_CTR_INFO, ZG_CTR_TYPE.ZG_CTR_UNDEF);
                             if (num2 < 0)
                             {
-                                Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_Open.", false));
+                                Helpers.StringGenerateAnswer("Error ZG_Ctr_Open.", false);
                                 return;
                             }
                             else
@@ -308,7 +325,7 @@ internal class Program
                                 num2 = ZGIntf.ZG_Ctr_SetNotification(Program.m_hCtr, pSettings);
                                 if (num2 < 0)
                                 {
-                                    Console.WriteLine(Helpers.StringGenerateAnswer("Error ZG_Ctr_SetNotification.", false));
+                                    Helpers.StringGenerateAnswer("Error ZG_Ctr_SetNotification.", false);
                                     return;
                                 }
                                 else
@@ -367,8 +384,8 @@ internal class Program
                                                 }
                                             case "--erase-key":
                                                 {
-                                                    bank = args[3];
-                                                    key_num = args[4];
+                                                    bank = args[2];
+                                                    key_num = args[3];
 
                                                     DoActions.DoClearKey(bank, key_num);
                                                     break;
@@ -384,7 +401,7 @@ internal class Program
                                                     break;
                                                 }
                                             default:
-                                                Console.WriteLine(Helpers.StringGenerateAnswer("Wrong command", false));
+                                                Helpers.StringGenerateAnswer("Wrong command", false);
                                                 break;
                                         }
                                     }
@@ -409,7 +426,7 @@ internal class Program
                                         break;
                                     }
                                 default:
-                                    Console.WriteLine(Helpers.StringGenerateAnswer("Wrong command, try --help ", false));
+                                    Helpers.StringGenerateAnswer("Wrong command, try --help ", false);
                                     break;
                             }
                         }
