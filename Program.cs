@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 using ZGuard;
 using ZPort;
 
-
 internal class Program
 {
     public const Byte CtrAddr = 2;
@@ -118,7 +117,7 @@ internal class Program
                 DoActions.MYKEY mYKEY = default(DoActions.MYKEY);
                 mYKEY.m_Num = new byte[16];
                 if (Helpers.ParseKeyNum(ref mYKEY.m_Num, array[1]))
-                {                  
+                {
                     mYKEY.m_nType = ZG_CTR_KEY_TYPE.ZG_KEY_NORMAL;
                     mYKEY.m_nAccess = 255u;
                     if (array.Length >= 1)
@@ -185,7 +184,7 @@ internal class Program
                     }
                     ZG_CTR_KEY zG_CTR_KEY = array[j % array.Length];
 
-                    
+
 
                     if (!zG_CTR_KEY.fErased)
                     {
@@ -201,11 +200,11 @@ internal class Program
             Helpers.StringGenerateAnswer(result, true);
         }
     }
-    
+
     private static void ShowKeyTopIndex()
     {
         int num = 0;
-        List<Object> result = new List<object>(); 
+        List<Object> result = new List<object>();
         for (int i = 0; i < Program.m_nMaxBanks; i++)
         {
             int num2 = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref num, i);
@@ -214,7 +213,7 @@ internal class Program
                 Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                 break;
             }
-            var bank_data = new 
+            var bank_data = new
             {
                 Bank = i,
                 top_index = num
@@ -229,25 +228,29 @@ internal class Program
     private static void ShowHelp()
     {
         Console.WriteLine("= Help ============================");
-        Console.WriteLine("--show-keys       - Show Keys");
-        Console.WriteLine("--check-key       - Search key by number, -1 last used");
-        Console.WriteLine("--border-keys     - Top border of the keys...");
-        Console.WriteLine("--erase-key-all   - Erase all keys");
+
+        Console.WriteLine("--show-keys       [address:port] - Show Keys");
+        Console.WriteLine("--border-keys     [address:port] - Top border of the keys...");
+        Console.WriteLine("--erase-key-all   [address:port] - Erase all keys");
+        Console.WriteLine("--events          [address:port] - Show Events");
         Console.WriteLine("--erase-key-cache - Earse key cache (delete tmp file)");
-        Console.WriteLine("--events             - Show Events");
+
         Console.WriteLine("=============================");
-        Console.WriteLine("--add-key {bank} {nIdx | -1} {key_num | -1} {key_type | 1 | 2 | 3 } {access_level | FF} - Setup key");
-        Console.WriteLine("--add-key-list {path_to_list}  - Upload new key list in csv format");
-        Console.WriteLine("--save-keys {file_name}        - Save keys to file");
-        Console.WriteLine("--erase-key {bank} {key_index} - Erase key by index");
+
+        Console.WriteLine("--add-key       [address:port] {key_number}   - Setup key");
+        Console.WriteLine("--check-key     [address:port] {key_number}   - Search key by number, -1 last used");
+        Console.WriteLine("--add-keys-list [address:port] {path_to_list} - Upload new key list in csv format");
+        Console.WriteLine("--save-keys     [address:port] {file_name}    - Save keys to file");
+        Console.WriteLine("--erase-key     [address:port] {key_index}    - Erase key by index");
     }
+
     // ENTRY POINT ============================================================
     private static void Main(string[] args)
     {
         Console.WriteLine();
         string command = "--help";
         string pszName = null;
-        // Check arguments == 
+        // Check arguments ==
         if (args.Length < 1)
         {
             Console.WriteLine("Need more argumetns, <command> [address:port] [cmd parameters]");
@@ -282,9 +285,9 @@ internal class Program
             {
                 // All Ok - try connect to converter and controller ==
                 try
-                {       
+                {
                     if (pszName != null)
-                    { 
+                    {
                         ZG_CVT_INFO pInfo = new ZG_CVT_INFO();
                         ZG_CVT_OPEN_PARAMS zG_CVT_OPEN_PARAMS = default(ZG_CVT_OPEN_PARAMS);
                         zG_CVT_OPEN_PARAMS.nPortType = ZP_PORT_TYPE.ZP_PORT_IP;
@@ -333,12 +336,7 @@ internal class Program
                                     NotifyTh.StartNotifyThread();
                                     if (command != "")
                                     {
-                                        string bank = "0";
                                         string key_num = "000,00000";
-                                        string nIdsx = "-1";
-                                        string key_type = "1";
-                                        string access_level = "FF";
-
                                         switch (command)
                                         {
                                             case "--show-keys":
@@ -348,10 +346,8 @@ internal class Program
                                                 }
                                             case "--check-key":
                                                 {
-                                                    bank = args[3];
-                                                    key_num = args[4];
-
-                                                    DoActions.DoFindKeyByNumber(bank, key_num);
+                                                    key_num = args[2];
+                                                    DoActions.DoFindKeyByNumber(key_num);
                                                     break;
                                                 }
                                             case "--border-keys":
@@ -361,17 +357,11 @@ internal class Program
                                                 }
                                             case "--add-key":
                                                 {
-
-                                                    bank = args[2];
-                                                    key_num = args[4];
-                                                    nIdsx = args[3];
-                                                    key_type = args[5];
-                                                    access_level = args[6];
-
-                                                    DoActions.DoSetKey(bank, nIdsx, key_num, key_type, access_level);
+                                                    key_num = args[2];
+                                                    DoActions.DoSetKey(key_num);
                                                     break;
                                                 }
-                                            case "--add-key-list":
+                                            case "--add-keys-list":
                                                 {
                                                     string keysList = args[2];
                                                     DoActions.DoLoadKeysFromFile(keysList);
@@ -384,10 +374,8 @@ internal class Program
                                                 }
                                             case "--erase-key":
                                                 {
-                                                    bank = args[2];
-                                                    key_num = args[3];
-
-                                                    DoActions.DoClearKey(bank, key_num);
+                                                    key_num = args[2];
+                                                    DoActions.DoClearKey(key_num);
                                                     break;
                                                 }
                                             case "--erase-key-all":

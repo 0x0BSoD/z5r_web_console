@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 
 using Newtonsoft.Json;
 using ZGuard;
+
 class DoActions
 {
-
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MYKEY
     {
@@ -15,7 +15,6 @@ class DoActions
         public Byte[] m_Num;
         public ZG_CTR_KEY_TYPE m_nType;
         public UInt32 m_nAccess;
-
     }
 
     public class MyKeysComparer : IComparer<MYKEY>
@@ -32,51 +31,53 @@ class DoActions
         Helpers.StringGenerateAnswer("File delete Success", true);
     }
 
-    public static void DoSetKey(string bank, string nIdsx, string key_num, string key_type, string access_level)
+    public static void DoSetKey(string key_num)
     {
-        int nBankN, nKeyIdx, nKeyType, nKeyAccess;
-
-        nBankN = Convert.ToInt32(bank);
-        nKeyIdx = Convert.ToInt32(nIdsx);
-        nKeyType = Convert.ToInt32(key_type);
-        nKeyAccess = Convert.ToInt32(access_level, 16);
-
+        int nKeyIdx, nKeyType, nKeyAccess;
         int hr;
-        if (nKeyIdx == -1)
+        int banks = Program.m_nMaxBanks;
+
+        nKeyIdx = -1;
+        nKeyType = 1;
+        nKeyAccess = Convert.ToInt32("FF", 16);
+
+        for (int i=0;i<banks;i++)
         {
-            hr = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref nKeyIdx, nBankN);
+            hr = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref nKeyIdx, i);
             if (hr < 0)
             {
                 Helpers.StringGenerateAnswer("Error ZG_Ctr_GetKeyTopIndex", false);
                 return;
             }
-        }
-        ZG_CTR_KEY[] aKeys = new ZG_CTR_KEY[1];
-        aKeys[0].nType = (ZG_CTR_KEY_TYPE)nKeyType;
-        aKeys[0].nAccess = (Byte)nKeyAccess;
-        aKeys[0].rNum = new Byte[16];
-        if (key_num == "-1")
-        {
-            hr = ZGIntf.ZG_Ctr_ReadLastKeyNum(Program.m_hCtr, aKeys[0].rNum);
-            if (hr < 0)
+
+            ZG_CTR_KEY[] aKeys = new ZG_CTR_KEY[1];
+            aKeys[0].nType = (ZG_CTR_KEY_TYPE)nKeyType;
+            aKeys[0].nAccess = (Byte)nKeyAccess;
+            aKeys[0].rNum = new Byte[16];
+            if (key_num == "-1")
             {
-                Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadLastKeyNum", false);
+                hr = ZGIntf.ZG_Ctr_ReadLastKeyNum(Program.m_hCtr, aKeys[0].rNum);
+                if (hr < 0)
+                {
+                    Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadLastKeyNum", false);
+                    return;
+                }
+            }
+            else if (!Helpers.ParseKeyNum(ref aKeys[0].rNum, key_num))
+            {
                 return;
             }
+            hr = ZGIntf.ZG_Ctr_WriteKeys(Program.m_hCtr, nKeyIdx, aKeys, 1, null, IntPtr.Zero, i);
+            if (hr < 0)
+            {
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_WriteKeys", false);
+                return;
+            }
+            Helpers.StringGenerateAnswer(key_num + " set", true);
         }
-        else if (!Helpers.ParseKeyNum(ref aKeys[0].rNum, key_num))
-        {
-            return;
-        }
-        hr = ZGIntf.ZG_Ctr_WriteKeys(Program.m_hCtr, nKeyIdx, aKeys, 1, null, IntPtr.Zero, nBankN);
-        if (hr < 0)
-        {
-            Helpers.StringGenerateAnswer("Error ZG_Ctr_WriteKeys", false);
-            return;
-        }
-        Helpers.StringGenerateAnswer(key_num + " set", true);
 
     }
+
     private static void SetCtrList(ref ZG_CTR_KEY[] aList, ref bool[] aSync)
     {
         bool flag = false;
@@ -135,6 +136,7 @@ class DoActions
             Console.WriteLine("List not changed.");
         }
     }
+
     public static void DoSaveKeysToFile()
     {
         Console.WriteLine("Enter file name:");
@@ -162,43 +164,59 @@ class DoActions
             }
         }
     }
-    public static void DoFindKeyByNumber(string bank, string key_num)
+
+    public static void DoFindKeyByNumber(string key_num)
     {
         Program.m_rFindNum = new byte[16];
-        int nBankN = Convert.ToInt32(bank);
+        int banks = Program.m_nMaxBanks;
         int num;
+
         if (key_num == "-1")
         {
             num = ZGIntf.ZG_Ctr_ReadLastKeyNum(Program.m_hCtr, Program.m_rFindNum);
             if (num < 0)
             {
-                Console.WriteLine("Error ZG_Ctr_ReadLastKeyNum ({0}).", num);
-                Console.ReadLine();
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_ReadLastKeyNum", false);
                 return;
             }
         }
         else if (!Helpers.ParseKeyNum(ref Program.m_rFindNum, key_num))
         {
-            Console.WriteLine("Wrong enter.");
+            Helpers.StringGenerateAnswer("Wrong enter", false);
             return;
         }
-        Program.m_nFoundKeyIdx = -1;
-        num = ZGIntf.ZG_Ctr_EnumKeys(Program.m_hCtr, 0, Helpers.FindKeyEnum, IntPtr.Zero, nBankN);
-        if (num < 0)
+
+        for (int i = 0; i < banks; i++)
         {
-            Console.WriteLine("Error ZG_Ctr_EnumKeys ({0}).", num);
-            Console.ReadLine();
+            Program.m_nFoundKeyIdx = -1;
+            num = ZGIntf.ZG_Ctr_EnumKeys(Program.m_hCtr, 0, Helpers.FindKeyEnum, IntPtr.Zero, i);
+            if (num < 0)
+            {
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_EnumKeys", false);
+            }
+            else if (Program.m_nFoundKeyIdx != -1)
+            {
+                var result = new
+                {
+                    bank = i,
+                    key = ZGIntf.CardNumToStr(Program.m_rFindNum, Program.m_fProximity),
+                    index = Program.m_nFoundKeyIdx
+                };
+                Helpers.StringGenerateAnswer(result, true);
+            }
+            else
+            {
+                var result = new
+                {
+                    key = ZGIntf.CardNumToStr(Program.m_rFindNum, Program.m_fProximity),
+                    index = "Not Found"
+                };
+                Helpers.StringGenerateAnswer(result, true);
+            }
         }
-        else if (Program.m_nFoundKeyIdx != -1)
-        {
-            Console.WriteLine("Key {0} found (index={0}).", ZGIntf.CardNumToStr(Program.m_rFindNum, Program.m_fProximity), Program.m_nFoundKeyIdx);
-        }
-        else
-        {
-            Console.WriteLine("Key {0} not found.", ZGIntf.CardNumToStr(Program.m_rFindNum, Program.m_fProximity));
-        }
-        
+
     }
+
     public static bool DoLoadKeysFromFile(string keysList)
     {
         if (keysList == "")
@@ -271,39 +289,58 @@ class DoActions
         return true;
     }
 
-    public static void DoClearKey(string bank, string key_num)
+    public static void DoClearKey(string key_num)
     {
-        int nBankN = Convert.ToInt32(bank);
-        int num = Convert.ToInt32(key_num);
-        int num3;
-        if (num == -1)
+        Program.m_rFindNum = new byte[16];
+        Program.m_nFoundKeyIdx = -1;
+        int banks = Program.m_nMaxBanks;
+        int return_result;
+        int find_kIdx_result;
+
+        if (!Helpers.ParseKeyNum(ref Program.m_rFindNum, key_num))
         {
-            int num2 = 0;
-            num3 = ZGIntf.ZG_Ctr_GetKeyTopIndex(Program.m_hCtr, ref num2, nBankN);
-            if (num3 < 0)
+            Helpers.StringGenerateAnswer("Wrong enter", false);
+            return;
+        }
+
+        for (int i=0;i<banks;i++)
+        {
+
+            find_kIdx_result = ZGIntf.ZG_Ctr_EnumKeys(Program.m_hCtr, 0, Helpers.FindKeyEnum, IntPtr.Zero, i);
+            if (find_kIdx_result < 0)
             {
-                Console.WriteLine("Error ZG_Ctr_GetKeyTopIndex ({0}).", num3);
-                Console.ReadLine();
-                return;
+                Helpers.StringGenerateAnswer("Error ZG_Ctr_EnumKeys", false);
             }
-            if (num2 == 0)
+            else if (Program.m_nFoundKeyIdx != -1)
             {
-                Console.WriteLine("Key list empty.");
-                return;
+                var result = new
+                {
+                    bank = i,
+                    key = ZGIntf.CardNumToStr(Program.m_rFindNum, Program.m_fProximity),
+                    index = Program.m_nFoundKeyIdx
+                };
+
+                return_result = ZGIntf.ZG_Ctr_ClearKeys(Program.m_hCtr, Program.m_nFoundKeyIdx, 1, null, IntPtr.Zero, i, true);
+                if (return_result < 0)
+                {
+                    Helpers.StringGenerateAnswer("Error ZG_Ctr_ClearKeys", false);
+                }
+                else
+                {
+                    Helpers.StringGenerateAnswer(result, true);
+                    return;
+                }
             }
-            num = num2 - 1;
+            else
+            {
+                var result = new
+                {
+                    key = ZGIntf.CardNumToStr(Program.m_rFindNum, Program.m_fProximity),
+                    index = "Not Found"
+                };
+                Helpers.StringGenerateAnswer(result, true);
+            }
         }
-        num3 = ZGIntf.ZG_Ctr_ClearKeys(Program.m_hCtr, num, 1, null, IntPtr.Zero, nBankN, true);
-        if (num3 < 0)
-        {
-            Console.WriteLine("Error ZG_Ctr_ClearKeys ({0}).", num3);
-            Console.ReadLine();
-        }
-        else
-        {
-            Console.WriteLine("Success.");
-        }
-        
     }
 
     public static void DoClearAllKeys()
@@ -380,6 +417,7 @@ class DoActions
         Helpers.StringGenerateAnswer(output, true);
         Helpers.ResetEventsIndex();
     }
+
     static List<string> ShowEvents(int nStart, int nCount)
     {
         ZG_CTR_EVENT[] aEvents = new ZG_CTR_EVENT[6];
