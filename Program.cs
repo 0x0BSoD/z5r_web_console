@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using ZGuard;
 using ZPort;
 
+
 internal class Program
 {
     public const Byte CtrAddr = 2;
@@ -231,7 +232,7 @@ internal class Program
 
         Console.WriteLine("--show-keys       [address:port] - Show Keys");
         Console.WriteLine("--border-keys     [address:port] - Top border of the keys...");
-        Console.WriteLine("--erase-key-all   [address:port] - Erase all keys");
+        Console.WriteLine("--erase-keys-all   [address:port] - Erase all keys");
         Console.WriteLine("--events          [address:port] - Show Events");
         Console.WriteLine("--erase-key-cache - Earse key cache (delete tmp file)");
 
@@ -243,7 +244,6 @@ internal class Program
         Console.WriteLine("--save-keys     [address:port] {file_name}    - Save keys to file");
         Console.WriteLine("--erase-key     [address:port] {key_index}    - Erase key by index");
     }
-
     // ENTRY POINT ============================================================
     private static void Main(string[] args)
     {
@@ -378,7 +378,7 @@ internal class Program
                                                     DoActions.DoClearKey(key_num);
                                                     break;
                                                 }
-                                            case "--erase-key-all":
+                                            case "--erase-keys-all":
                                                 {
                                                     DoActions.DoClearAllKeys();
                                                     break;

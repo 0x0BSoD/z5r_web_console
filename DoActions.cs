@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 
 using Newtonsoft.Json;
 using ZGuard;
-
 class DoActions
 {
+
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MYKEY
     {
@@ -15,6 +15,7 @@ class DoActions
         public Byte[] m_Num;
         public ZG_CTR_KEY_TYPE m_nType;
         public UInt32 m_nAccess;
+
     }
 
     public class MyKeysComparer : IComparer<MYKEY>
@@ -77,7 +78,6 @@ class DoActions
         }
 
     }
-
     private static void SetCtrList(ref ZG_CTR_KEY[] aList, ref bool[] aSync)
     {
         bool flag = false;
@@ -136,7 +136,6 @@ class DoActions
             Console.WriteLine("List not changed.");
         }
     }
-
     public static void DoSaveKeysToFile()
     {
         Console.WriteLine("Enter file name:");
@@ -164,7 +163,6 @@ class DoActions
             }
         }
     }
-
     public static void DoFindKeyByNumber(string key_num)
     {
         Program.m_rFindNum = new byte[16];
@@ -216,7 +214,6 @@ class DoActions
         }
 
     }
-
     public static bool DoLoadKeysFromFile(string keysList)
     {
         if (keysList == "")
@@ -328,7 +325,6 @@ class DoActions
                 else
                 {
                     Helpers.StringGenerateAnswer(result, true);
-                    return;
                 }
             }
             else
@@ -417,7 +413,6 @@ class DoActions
         Helpers.StringGenerateAnswer(output, true);
         Helpers.ResetEventsIndex();
     }
-
     static List<string> ShowEvents(int nStart, int nCount)
     {
         ZG_CTR_EVENT[] aEvents = new ZG_CTR_EVENT[6];

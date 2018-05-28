@@ -56,7 +56,7 @@ class Helpers
             {
                 return i;
             }
-            
+
         }
 
         for (int i = (n + nStart); i < nEnd; i++)
@@ -184,5 +184,6 @@ class Helpers
             return text2.Substring(text2.Length - 6);
         }
 }
+
 
 
